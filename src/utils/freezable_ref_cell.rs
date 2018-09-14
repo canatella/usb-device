@@ -29,6 +29,11 @@ impl<T> FreezableRefCell<T> {
     // Disable inlining to work around LLVM bug
     #[inline(never)]
     pub fn borrow_mut(&self) -> RefMut<T> {
+        if self.state.load(Ordering::SeqCst) != FREE {
+            panic!("cell not mutably borrowable");
+        }
+        self.state.store(BORROW_MUT, Ordering::SeqCst);
+        /*
         if self.state.compare_and_swap(
             FREE,
             BORROW_MUT,
@@ -36,6 +41,7 @@ impl<T> FreezableRefCell<T> {
         {
             panic!("cell not mutably borrowable");
         }
+        */
 
         RefMut {
             state: &self.state,
@@ -46,6 +52,11 @@ impl<T> FreezableRefCell<T> {
     // Disable inlining to work around LLVM bug
     #[inline(never)]
     pub fn freeze(&self) {
+        if self.state.load(Ordering::SeqCst) != FREE {
+            panic!("cell not freezable");
+        }
+        self.state.store(FROZEN, Ordering::SeqCst);
+        /*
         if self.state.compare_and_swap(
             FREE,
             FROZEN,
@@ -53,6 +64,7 @@ impl<T> FreezableRefCell<T> {
         {
             panic!("cell not freezable");
         }
+        */
     }
 
     // Disable inlining to work around LLVM bug

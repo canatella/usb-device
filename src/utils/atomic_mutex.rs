@@ -19,7 +19,9 @@ impl<T> AtomicMutex<T> {
     }
 
     pub fn try_lock(&self) -> Option<AtomicMutexGuard<T>> {
-        if self.lock.compare_and_swap(false, true, Ordering::SeqCst) == false {
+        //if self.lock.compare_and_swap(false, true, Ordering::SeqCst) == false {
+        if self.lock.load(Ordering::SeqCst) == false {
+            self.lock.store(true, Ordering::SeqCst);
             Some(AtomicMutexGuard {
                 lock: &self.lock,
                 value: unsafe { &mut *self.value.get() },

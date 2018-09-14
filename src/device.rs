@@ -357,7 +357,8 @@ impl<'a, B: UsbBus + 'a> UsbDevice<'a, B> {
                 control.state = ControlState::StatusOut;
             }
             ControlState::StatusIn => {
-                let addr = self.pending_address.swap(0, Ordering::SeqCst);
+                let addr = self.pending_address.load(Ordering::SeqCst);
+                self.pending_address.store(0, Ordering::SeqCst);
                 if addr != 0 {
                     // SET_ADDRESS is really handled after the status packet has been sent
                     self.bus.set_device_address(addr as u8);
